@@ -2,6 +2,10 @@ body {
   background-image: linear-gradient(to bottom right, #2980b9, #6dd5fa, #ffffff);
 }
 
+#h1Temp {
+  font-size: 4rem;
+}
+
 hr.stylized {
   padding: 0;
   border: none;
