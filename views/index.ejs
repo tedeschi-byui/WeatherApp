@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="shortcut icon" href="images/logo.png" type="image/x-icon">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <title>Weather</title>
+</head>
+
+<body>
+    <div class="container" style="min-height: 100vh;">
+        <!-- <div class="container" style="height: 90vh;"> -->
+        <div class="row">
+            <div class="col-12">
+                <div class="row">
+                    <div class="col-6">
+                        <h5 id="h5Local">--</h5>
+                    </div>
+                    <div class="col-6">
+                        <a class="float-right" href="#" onclick="getLocation()">+accurate local</a>
+                    </div>
+                </div>
+                <div id="divIcon" class="row">
+                    <canvas id="mainIcon" class="col-12"></canvas>
+                </div>
+                <div class="col-8 offset-2">
+                    <!-- <img id="imgIcon" width="100%" src="images/weather/cloudy.svg" alt="cloud"> -->
+                    <div class="row">
+                        <div class="col-3">
+                            <img class="my-2" src="images/weather/thermometer.svg" height="60%" alt="thermometer">
+                        </div>
+                        <div class="col-9">
+                            <h1 id="h1Temp" class="px-0 mx-0 text-right">--&deg;F</h1>
+                        </div>
+                    </div>
+                    <p id="pMinMax" class="my-0 text-center">&downarrow; --&deg;F / &uparrow; --&deg;F</p>
+                </div>
+                <p id="pSummary" class="text-center">Loading...</p>
+            </div>
+        </div>
+        <div class="row">
+            <div id="divDaily" class="col-12">
+
+            </div>
+        </div>
+        <p id="pLastUpdated" class="px-2"></p>
+    </div>
+</body>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script src="js/bootstrap.min.js"></script>
+
+<script>
+    window.onload = async () => {
+
+        weatherObj = {};
+        //check if there's a local file
+        if (window.localStorage.getItem('LastUpdated') !== null) {
+            weatherObj = JSON.parse(window.localStorage.getItem('LastUpdated'));
+            // console.log(weatherObj);
+            // console.log(`Updated: ${timeDifferenceExtense(timeDifferenceSeconds(weatherObj.weather.currently.time))}`)
+
+
+            // check if it's less than 30 mins old
+            if (timeDifferenceSeconds(weatherObj.weather.currently.time) < 1800) {
+                setWeather(weatherObj);
+            } else {
+                window.localStorage.removeItem('LastUpdated');
+                setWeather();
+            }
+        } else {
+            setWeather();
+        }
+    }
+
+    async function setWeather(weatherObj) {
+        let h5Local = document.getElementById("h5Local");
+        let divIcon = document.getElementById("divIcon");
+        let h1Temp = document.getElementById("h1Temp");
+        let pSummary = document.getElementById("pSummary");
+        let pMinMax = document.getElementById("pMinMax");
+        let divDaily = document.getElementById("divDaily");
+        let pLastUpdated = document.getElementById("pLastUpdated");
+
+        var icons = new Skycons(),
+            list = [
+                "clear-day", "clear-night", "partly-cloudy-day",
+                "partly-cloudy-night", "cloudy", "rain", "sleet", "snow", "wind",
+                "fog"
+            ],
+            i;
+
+        for (i = list.length; i--;)
+            icons.set(list[i], list[i]);
+
+        icons.play();
+
+
+        if (weatherObj && !weatherObj.accurate) {
+            // console.log("weatherObj set");
+
+            pLastUpdated.innerHTML = `Last Updated ${timeDifferenceExtense(timeDifferenceSeconds(weatherObj.weather.currently.time))}&MediumSpace;|&MediumSpace;<a href="#" onclick="setWeather()">force refresh</a>`;
+
+            // console.log(weatherObj.weather);
+            // return;
+
+            h5Local.innerText = `${weatherObj.location.city}, ${weatherObj.location.region}`;
+            icons.add("mainIcon", weatherObj.weather.currently.icon);
+            h1Temp.innerHTML = Math.round(parseFloat(weatherObj.weather.currently.temperature)) + `&deg;F`;
+            pSummary.innerText = weatherObj.weather.currently.summary;
+            pMinMax.innerHTML =
+                `&downarrow; ` + Math.round(parseFloat(weatherObj.weather.daily[0].temperatureMin)) + `&deg;F / ` +
+                `&uparrow; ` + Math.round(parseFloat(weatherObj.weather.daily[0].temperatureMax)) + `&deg;F `;
+
+            let contentDay = ``;
+            for (let index = 1; index <= 3; index++) {
+                contentDay += `
+                            <hr class="stylized">
+                            <div class="row">
+                                <div class="col-5 px-0">
+                                    <canvas id="icon-${index}" class="py-0 my-0" style="width:100%;"></canvas>
+                                    <!-- <img id="imgIcon" src="images/weather/fog-1.svg" alt="cloud"> -->
+                                </div>
+                                <div class="col-2 py-2">
+                                    <p class="my-0">&downarrow;${Math.round(parseFloat(weatherObj.weather.daily[index].temperatureMin))}&deg;F</p>
+                                    <p class="my-0">&uparrow;${Math.round(parseFloat(weatherObj.weather.daily[index].temperatureMax))}&deg;F</p>
+                                </div>
+                                <div class="col-5 py-2">
+                                    <p>${weatherObj.weather.daily[index].summary}</p>
+                                </div>
+                            </div>
+                            `;
+            }
+
+            divDaily.innerHTML = contentDay;
+
+            for (let index = 1; index <= 3; index++) {
+                icons.add(`icon-${index}`, weatherObj.weather.daily[index].icon);
+            }
+        } else {
+            let coords = ``;
+            let localObj;
+
+            if (weatherObj && weatherObj.accurate) {
+                coords = `${weatherObj.lat},${weatherObj.lon}`;
+            } else {
+                let getIpInfo = new Promise((res, rej) => {
+                    $.get("https://ipinfo.io?token=8eb06542cbf5d1", loc => {
+                        res(loc);
+                    }, "jsonp");
+                });
+
+                localObj = await getIpInfo.then(loc => { return loc; });
+                h5Local.innerText = `${localObj.city}, ${localObj.region}`;
+                coords = localObj.loc;
+            }
+
+
+            $.get(`/api/weather/${coords}`, data => {
+                // generating the object to minimize space used
+                let lastUpdatedObj = {};
+                lastUpdatedObj.weather = {};
+                lastUpdatedObj.location = {};
+
+                lastUpdatedObj.weather.currently = data.response.currently;
+                lastUpdatedObj.weather.currently.time = Date.now();
+                lastUpdatedObj.weather.daily = [];
+                lastUpdatedObj.weather.daily[0] = data.response.daily.data[0];
+                lastUpdatedObj.weather.daily[1] = data.response.daily.data[1];
+                lastUpdatedObj.weather.daily[2] = data.response.daily.data[2];
+                lastUpdatedObj.weather.daily[3] = data.response.daily.data[3];
+
+                lastUpdatedObj.location.city = (localObj ? localObj.city : "Data from coordinates");
+                lastUpdatedObj.location.region = (localObj ? localObj.region : "");
+                lastUpdatedObj.location.loc = (localObj ? localObj.loc : coords);
+
+                // save file to localStorage
+                window.localStorage.setItem('LastUpdated', JSON.stringify(lastUpdatedObj))
+
+                // console.log(`data: ${JSON.stringify(data)}`);
+                // divIcon.innerHTML = `<canvas id="${data.response.currently.icon}" class="col-12"></canvas>`;
+                icons.add("mainIcon", data.response.currently.icon);
+                h1Temp.innerHTML = Math.round(parseFloat(data.response.currently.temperature)) + `&deg;F`;
+                pSummary.innerText = data.response.currently.summary;
+                pMinMax.innerHTML =
+                    `&downarrow; ` + Math.round(parseFloat(data.response.daily.data[0].temperatureMin)) + `&deg;F / ` +
+                    `&uparrow; ` + Math.round(parseFloat(data.response.daily.data[0].temperatureMax)) + `&deg;F `;
+
+                let contentDay = ``;
+                for (let index = 1; index <= 3; index++) {
+                    contentDay += `
+                                    <hr class="stylized">
+                                    <div class="row">
+                                        <div class="col-5 px-0">
+                                            <canvas id="icon-${index}" class="py-0 my-0" style="width:100%;"></canvas>
+                                            <!-- <img id="imgIcon" src="images/weather/fog-1.svg" alt="cloud"> -->
+                                        </div>
+                                        <div class="col-2 py-2">
+                                            <p class="my-0">&downarrow;${Math.round(parseFloat(data.response.daily.data[index].temperatureMin))}&deg;F</p>
+                                            <p class="my-0">&uparrow;${Math.round(parseFloat(data.response.daily.data[index].temperatureMax))}&deg;F</p>
+                                        </div>
+                                        <div class="col-5 py-2">
+                                            <p>${data.response.daily.data[index].summary}</p>
+                                        </div>
+                                    </div>
+                                    `;
+                }
+
+                divDaily.innerHTML = contentDay;
+                for (let index = 1; index <= 3; index++) {
+                    icons.add(`icon-${index}`, data.response.daily.data[index].icon);
+                }
+
+            })
+        }
+
+        return;
+    }
+
+    function getLocation() {
+        if (!navigator.geolocation) {
+            alert("This browser does not support geolocation");
+        }
+        else {
+            navigator.geolocation.getCurrentPosition(data => {
+                setWeather({ accurate: true, lat: data.coords.latitude, lon: data.coords.longitude });
+                let h5Local = document.getElementById("h5Local");
+                h5Local.innerText = `Data from coordinates`;
+            }, error => {
+                alert(`Unable to access your location: ${error.message}`);
+            });
+        }
+    }
+
+    function timeDifferenceSeconds(previous) {
+        return Math.round((Date.now() - previous) / 1000);
+    }
+
+    function timeDifferenceExtense(time) {
+
+        var msPerMinute = 60 * 1000;
+        var msPerHour = msPerMinute * 60;
+        var msPerDay = msPerHour * 24;
+        var msPerMonth = msPerDay * 30;
+        var msPerYear = msPerDay * 365;
+
+        var elapsed = time * 1000;
+
+        if (elapsed < msPerMinute) {
+            return Math.round(elapsed / 1000) + ' seconds ago';
+        }
+
+        else if (elapsed < msPerHour) {
+            return Math.round(elapsed / msPerMinute) + ' minutes ago';
+        }
+
+        else if (elapsed < msPerDay) {
+            return Math.round(elapsed / msPerHour) + ' hours ago';
+        }
+
+        else if (elapsed < msPerMonth) {
+            return 'approximately ' + Math.round(elapsed / msPerDay) + ' days ago';
+        }
+
+        else if (elapsed < msPerYear) {
+            return 'approximately ' + Math.round(elapsed / msPerMonth) + ' months ago';
+        }
+
+        else {
+            return 'approximately ' + Math.round(elapsed / msPerYear) + ' years ago';
+        }
+    }
+</script>
+
+<script src="js/skycons.js"></script>
+
+</html>

@@ -1,0 +1,17 @@
+{
+  "name": "weather-tedeschi",
+  "version": "1.0.0",
+  "description": "Weather Web App for CIT261(BYU-I)",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Henrique Tedeschi",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^8.2.0",
+    "ejs": "^3.0.1",
+    "express": "^4.17.1",
+    "request": "^2.88.2"
+  }
+}
