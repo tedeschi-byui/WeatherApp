@@ -1,9 +1,30 @@
+@import url('https://fonts.googleapis.com/css?family=Alegreya+Sans&display=swap');
+
 body {
-  background-image: linear-gradient(to bottom right, #2980b9, #6dd5fa, #ffffff);
+  font-family: 'Alegreya Sans', sans-serif;
+  /* background-image: linear-gradient(to bottom right, #2980b9, #6dd5fa, #ffffff); */
+  background-color: #13293d;
+  color: rgb(232, 241, 242);
+}
+
+a {
+  color: #247ba0;
+}
+
+svg {
+  fill: red;
 }
 
 #h1Temp {
   font-size: 4rem;
+}
+
+p {
+  font-size: 1.5rem;
+}
+
+#pLastUpdated {
+  font-size: 1rem;
 }
 
 hr.stylized {
@@ -12,27 +33,27 @@ hr.stylized {
   height: 1px;
   background-image: -webkit-linear-gradient(
     left,
-    rgba(0, 0, 0, 0),
-    rgba(0, 0, 0, 0.75),
-    rgba(0, 0, 0, 0)
+    rgba(232, 241, 242, 0),
+    rgba(232, 241, 242, 0.75),
+    rgba(232, 241, 242, 0)
   );
   background-image: -moz-linear-gradient(
     left,
-    rgba(0, 0, 0, 0),
-    rgba(0, 0, 0, 0.75),
-    rgba(0, 0, 0, 0)
+    rgba(232, 241, 242, 0),
+    rgba(232, 241, 242, 0.75),
+    rgba(232, 241, 242, 0)
   );
   background-image: -ms-linear-gradient(
     left,
-    rgba(0, 0, 0, 0),
-    rgba(0, 0, 0, 0.75),
-    rgba(0, 0, 0, 0)
+    rgba(232, 241, 242, 0),
+    rgba(232, 241, 242, 0.75),
+    rgba(232, 241, 242, 0)
   );
   background-image: -o-linear-gradient(
     left,
-    rgba(0, 0, 0, 0),
-    rgba(0, 0, 0, 0.75),
-    rgba(0, 0, 0, 0)
+    rgba(232, 241, 242, 0),
+    rgba(232, 241, 242, 0.75),
+    rgba(232, 241, 242, 0)
   );
   color: #333;
   text-align: center;
